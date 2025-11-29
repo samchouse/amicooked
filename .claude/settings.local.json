@@ -5,7 +5,8 @@
       "Bash(mkdir:*)",
       "Bash(pnpm build:*)",
       "Bash(dir \"C:\\Users\\Édouard\\Files\\Projects\\amicooked\\src\" /b)",
-      "Bash(pnpm dev)"
+      "Bash(pnpm dev)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

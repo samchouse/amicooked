@@ -65,20 +65,17 @@ export default function Home() {
         {appState === "landing" && (
           <div className="max-w-3xl w-full text-center space-y-8">
             
-            <div className="animate-fade-in-up delay-0 inline-flex items-center px-4 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-sm font-medium shadow-[0_0_20px_rgba(249,115,22,0.15)] mb-4">
-              <GraduationCap className="w-4 h-4 mr-2" />
-              Assess your academic standing
-            </div>
+
 
             <h1 className="animate-fade-in-up delay-100 text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight drop-shadow-2xl">
-              ARE YOU <br />
+              AM I <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600 animate-gradient-x">
                 COOKED?
               </span>
             </h1>
             
             <p className="animate-fade-in-up delay-200 text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed">
-              Find out if you're academically doomed or destined for greatness. Our algorithm benchmarks your habits against the "passing" meta to calculate your survival odds.
+              Find out if you're <span className="font-bold text-zinc-200">cooked</span> or <span className="font-bold text-zinc-200">locked in</span>. Our model, trained on real student data, analyzes your habits to calculate your cooked score.
             </p>
 
             <div className="pt-8 animate-fade-in-up delay-300">

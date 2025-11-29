@@ -295,8 +295,7 @@ export default function Survey({ onComplete }: SurveyProps) {
                       onClick={() => updateField("Mjob", job as any)}
                       className={cn(
                         "px-2 py-3 rounded-lg border text-xs font-bold uppercase transition-all",
-                        formData.Mjob === job ? "bg-purple-500/20 border-purple-500 text-white" : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:bg-zinc-800"
-                      )}
+                                                  formData.Mjob === job ? "bg-purple-500/20 border-purple-500 text-white" : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:bg-zinc-800"                      )}
                     >
                       {job.replace('_', ' ')}
                     </button>
@@ -329,8 +328,7 @@ export default function Survey({ onComplete }: SurveyProps) {
                       onClick={() => updateField("Fjob", job as any)}
                       className={cn(
                         "px-2 py-3 rounded-lg border text-xs font-bold uppercase transition-all",
-                        formData.Fjob === job ? "bg-fuchsia-500/20 border-fuchsia-500 text-white" : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:bg-zinc-800"
-                      )}
+                                                  formData.Fjob === job ? "bg-pink-500/20 border-pink-500 text-white" : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:bg-zinc-800"                      )}
                     >
                       {job.replace('_', ' ')}
                     </button>
@@ -623,8 +621,8 @@ export default function Survey({ onComplete }: SurveyProps) {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-purple-100 opacity-0 group-hover:opacity-100 transition-opacity" />
           <span className="relative z-10 flex items-center gap-2">
-            {step === steps.length - 1 ? "Analyze Data" : "Next Step"}
-            {step === steps.length - 1 ? <Zap className="w-5 h-5 fill-black" /> : <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+            {step === steps.length - 1 ? "Analyze" : "Next Step"}
+            {step === steps.length - 1 ? <Zap className="w-5 h-5" /> : <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
           </span>
         </button>
       </div>

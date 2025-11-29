@@ -39,7 +39,7 @@ interface Student {
 
 export async function getStudentData(): Promise<Student[]> {
   try {
-    const filePath = path.join(process.cwd(), 'student-por.csv');
+    const filePath = path.join(process.cwd(), 'api/student-por.csv');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     
     const rows = fileContent.trim().split('\n');

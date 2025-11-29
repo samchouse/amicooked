@@ -1,93 +1,93 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Brain, Database, Globe, Lock, Search, Server, ShieldCheck, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { Brain, Search, Calculator, Sparkles, FileText, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const loadingSteps = [
-  { msg: 'Initializing neural link...', icon: Brain },
-  { msg: 'Decrypting student records...', icon: Lock },
-  { msg: 'Scanning academic parameters...', icon: Search },
-  { msg: 'Querying global student database...', icon: Globe },
-  { msg: 'Analyzing failure probabilities...', icon: Database },
-  { msg: 'Calculating "Cooked" index...', icon: Zap },
-  { msg: 'Finalizing verdict...', icon: ShieldCheck },
+const STEPS = [
+  { label: "Processing Data", sub: "Analyzing your survey responses...", icon: Brain },
+  { label: "Pattern Matching", sub: "Comparing with 600+ student records...", icon: Search },
+  { label: "Risk Assessment", sub: "Calculating academic failure probability...", icon: Calculator },
+  { label: "Insight Generation", sub: "identifying key performance indicators...", icon: Sparkles },
+  { label: "Finalizing Report", sub: "Preparing your dashboard...", icon: FileText },
 ];
 
 export default function Loading() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Cycle through steps
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
-    }, 600);
-    return () => clearInterval(interval);
+    // Total duration for the loading sequence (e.g., 8 seconds)
+    const TOTAL_DURATION = 8000;
+    const STEP_DURATION = TOTAL_DURATION / STEPS.length;
+
+    // Step Timer
+    const stepInterval = setInterval(() => {
+      setCurrentStep((prev) => {
+        if (prev < STEPS.length - 1) return prev + 1;
+        return prev;
+      });
+    }, STEP_DURATION);
+
+    // Smooth Progress Bar
+    const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const p = Math.min((elapsed / TOTAL_DURATION) * 100, 100);
+      setProgress(p);
+    }, 16); // 60fps
+
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
   }, []);
 
-  const CurrentIcon = loadingSteps[currentStep].icon;
+  const CurrentIcon = STEPS[currentStep].icon;
 
   return (
-    <div className="w-full h-full min-h-[500px] flex flex-col items-center justify-center relative overflow-hidden bg-zinc-900/20">
-      {/* Background Effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-purple-500/20 blur-[100px] rounded-full animate-pulse-glow" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-orange-500/10 blur-[80px] rounded-full animate-pulse" />
+    <div className="w-full h-full min-h-[500px] flex flex-col items-center justify-center relative bg-zinc-950/50">
+      
+      {/* Ambient Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[128px] animate-pulse-glow" />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-md w-full p-8">
+      <div className="relative z-10 w-full max-w-md p-8 flex flex-col items-center text-center space-y-10">
         
-        {/* Scanner Visual */}
-        <div className="relative w-32 h-32 mb-12">
-           {/* Hexagon/Circle Container */}
-           <div className="absolute inset-0 rounded-full border border-zinc-700 bg-zinc-900/50 backdrop-blur-sm flex items-center justify-center overflow-hidden shadow-2xl ring-1 ring-white/10">
-              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500 via-transparent to-transparent" />
-              
-              {/* Scanning Line */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent animate-scanner shadow-[0_0_10px_#f97316]" />
-              
-              {/* Icon Transition */}
-              <div className="relative z-10 transition-all duration-500 transform key={currentStep}">
-                  <CurrentIcon className="w-12 h-12 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
-              </div>
-           </div>
-
-           {/* Rotating Rings */}
-           <div className="absolute inset-[-10px] border border-zinc-800 rounded-full animate-[spin_10s_linear_infinite] border-t-purple-500/50 border-r-transparent border-b-transparent border-l-transparent" />
-           <div className="absolute inset-[-20px] border border-zinc-800/50 rounded-full animate-[spin_15s_linear_infinite_reverse] border-b-orange-500/30 border-t-transparent border-l-transparent border-r-transparent" />
+        {/* Icon Halo */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-purple-500/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500" />
+          <div className="relative w-24 h-24 bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl ring-1 ring-white/5">
+            <div key={currentStep} className="animate-scale-in duration-500">
+              <CurrentIcon className="w-10 h-10 text-white" strokeWidth={1.5} />
+            </div>
+          </div>
         </div>
 
-        {/* Text & Progress */}
-        <div className="w-full space-y-6 text-center">
-           <div className="h-8 overflow-hidden relative">
-              {loadingSteps.map((step, idx) => (
-                <div 
-                  key={idx}
-                  className={cn(
-                    "absolute inset-0 transition-all duration-500 flex items-center justify-center gap-3",
-                    idx === currentStep ? "opacity-100 translate-y-0" : idx < currentStep ? "opacity-0 -translate-y-full" : "opacity-0 translate-y-full"
-                  )}
-                >
-                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-wide">
-                    {step.msg}
-                  </span>
-                </div>
-              ))}
-           </div>
+        {/* Typography */}
+        <div className="space-y-3 max-w-xs mx-auto">
+          <h3 key={currentStep + "title"} className="text-2xl font-bold text-white tracking-tight animate-fade-in-up delay-0">
+            {STEPS[currentStep].label}
+          </h3>
+          <p key={currentStep + "sub"} className="text-zinc-400 text-sm font-medium animate-fade-in-up delay-100">
+            {STEPS[currentStep].sub}
+          </p>
+        </div>
 
-           {/* Progress Bar */}
-           <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden relative">
-              <div className="absolute inset-0 bg-zinc-800 animate-shimmer opacity-20" />
-              <div 
-                 className="h-full bg-gradient-to-r from-orange-500 via-purple-500 to-orange-500 transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"
-                 style={{ width: `${((currentStep + 1) / loadingSteps.length) * 100}%` }}
-              />
-           </div>
-           
-           <div className="flex justify-between text-xs font-mono text-zinc-500 uppercase tracking-widest">
-              <span>System Processing</span>
-              <span className="animate-pulse">{Math.round(((currentStep + 1) / loadingSteps.length) * 100)}%</span>
-           </div>
+        {/* Precision Progress Bar */}
+        <div className="w-full max-w-[240px] space-y-4">
+          <div className="h-[2px] w-full bg-zinc-800 rounded-full overflow-hidden relative">
+             <div 
+               className="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-500 to-purple-600 transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+               style={{ width: `${progress}%` }}
+             />
+          </div>
+          
+          <div className="flex justify-between items-center text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-widest">
+             <span>System.Processing</span>
+             <span className="text-zinc-500">{Math.round(progress)}%</span>
+          </div>
         </div>
 
       </div>

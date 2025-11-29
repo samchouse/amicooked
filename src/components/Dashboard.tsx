@@ -4,14 +4,14 @@ import { AnalysisResult, StudentData } from "@/lib/api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
 import { cn } from "@/lib/utils";
 import { RotateCcw, AlertTriangle, Share2, Award, Zap, TrendingUp, BrainCircuit } from "lucide-react";
-import TrendVisualizer from "./TrendVisualizer";
+import DataExplorer from "./DataExplorer";
 
 interface DashboardProps {
   result: AnalysisResult;
   onReset: () => void;
   studentData: any[];
   userSurveyData: StudentData;
-  userAnalysisResult: AnalysisResult; // NEW PROP
+  userAnalysisResult: AnalysisResult; 
 }
 
 export default function Dashboard({ result, onReset, studentData, userSurveyData, userAnalysisResult }: DashboardProps) {
@@ -36,20 +36,18 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
       <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6 gap-4 animate-fade-in-up delay-0">
         <div>
           <div className="flex items-center gap-2 mb-1">
-             <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs font-mono uppercase">Model: Student-Por-v1</span>
              <span className="bg-purple-900/30 text-purple-400 px-2 py-0.5 rounded text-xs font-mono uppercase">AI Analysis</span>
+             <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs font-mono uppercase">Model: Student-Por-v1</span>
           </div>
           <h2 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
             THE VERDICT
           </h2>
           <p className="text-zinc-400 mt-2 text-lg">
-            Projected Grade: <span className="text-white font-bold">{Math.round((result.predictedG3 / 20) * 100)}%</span> <span className="text-zinc-600 text-sm">(Passing is 50%)</span>
+            Projected Grade: <span className="text-white font-bold">{Math.round((result.predictedG3 / 20) * 100)}%</span>
           </p>
         </div>
         <div className="flex gap-3">
-           <button className="px-6 py-2.5 font-bold text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors flex items-center gap-2">
-             <Share2 className="w-4 h-4" /> SHARE STATS
-           </button>
+           {/* Share button removed here */}
            <button 
             onClick={onReset}
             className="px-6 py-2.5 font-bold text-sm bg-white hover:bg-zinc-200 text-black rounded-lg transition-colors flex items-center gap-2"
@@ -186,7 +184,7 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
       </div>
 
       <div className="pt-8 border-t border-white/10 animate-fade-in-up delay-400">
-        <TrendVisualizer studentData={studentData} userSurveyData={userSurveyData} userAnalysisResult={result} />
+        <DataExplorer studentData={studentData} userSurveyData={userSurveyData} userAnalysisResult={result} />
       </div>
 
     </div>
