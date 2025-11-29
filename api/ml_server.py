@@ -115,10 +115,10 @@ class StudentFeatures(BaseModel):
                 data['absences'] = min(data['absences'], 93)
                 
             if 'G1' in data and data['G1'] is not None:
-                data['G1'] = min(data['G1'], 20)
+                data['G1'] = min(round(data['G1'] / 5), 20)
                 
             if 'G2' in data and data['G2'] is not None:
-                data['G2'] = min(data['G2'], 20)
+                data['G2'] = min(round(data['G2'] / 5), 20)
             
             # Clamp age (15-22)
             if 'age' in data and data['age'] is not None:

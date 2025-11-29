@@ -27,8 +27,8 @@ export interface StudentData {
   Walc: number; // 1-5
   health: number; // 1-5
   absences: number; // 0-93
-  G1: number; // 0-20
-  G2: number; // 0-20
+  G1: number; // 0-100
+  G2: number; // 0-100
 }
 
 export interface AnalysisResult {
@@ -65,8 +65,8 @@ const PASSING_AVG = {
   Medu: 3.0,
   Fedu: 2.8,
   age: 17,
-  G1: 12,
-  G2: 12,
+  G1: 12, // Normalized 0-20
+  G2: 12, // Normalized 0-20
 };
 
 export async function analyzeStudentPerformance(data: StudentData): Promise<AnalysisResult> {
@@ -99,8 +99,8 @@ export async function analyzeStudentPerformance(data: StudentData): Promise<Anal
     Mjob: data.Mjob,
     Fjob: data.Fjob,
     famrel: data.famrel,
-    G1: data.G1,
-    G2: data.G2,
+    G1: data.G1, // Raw 0-100 value, normalized on backend
+    G2: data.G2, // Raw 0-100 value, normalized on backend
   };
 
   const response = await fetch("/api/predict", {
@@ -175,7 +175,7 @@ export async function analyzeStudentPerformance(data: StudentData): Promise<Anal
       { factor: "Absences", impact: data.absences < 4 ? "positive" : "negative", value: `${data.absences} missed` },
       { factor: "Parental Support", impact: data.famsup ? "positive" : "negative", value: data.famsup ? "Yes" : "No" },
       { factor: "Internet Access", impact: data.internet ? "positive" : "negative", value: data.internet ? "Yes" : "No" },
-      { factor: "Current Grades", impact: data.G1 > 10 || data.G2 > 10 ? "positive" : "neutral", value: `G1:${data.G1} G2:${data.G2}` },
+      { factor: "Current Grades", impact: data.G1 > 50 || data.G2 > 50 ? "positive" : "neutral", value: `G1:${data.G1} G2:${data.G2}` },
     ]
   };
 }
