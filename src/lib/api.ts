@@ -9,8 +9,8 @@ export interface StudentData {
   Fedu: number; // 0-4
   Mjob: "teacher" | "health" | "services" | "at_home" | "other";
   Fjob: "teacher" | "health" | "services" | "at_home" | "other";
-  traveltime: number; // 1-4
-  studytime: number; // 1-4
+  traveltime: number; // Raw minutes
+  studytime: number; // Raw hours
   failures: number; // 0-4
   schoolsup: boolean; // yes/no
   famsup: boolean; // yes/no
@@ -52,7 +52,7 @@ export interface AnalysisResult {
 
 // Mock stats from student-por.csv (approximate means for passing students)
 const PASSING_AVG = {
-  studytime: 2.5,
+  studytime: 4, // ~4 hours/week
   failures: 0.1,
   absences: 3.5,
   goout: 3.0,
@@ -60,7 +60,7 @@ const PASSING_AVG = {
   Dalc: 1.2,
   Walc: 2.0,
   health: 3.8,
-  traveltime: 1.5,
+  traveltime: 25, // ~25 minutes
   famrel: 4.0,
   Medu: 3.0,
   Fedu: 2.8,
@@ -70,79 +70,58 @@ const PASSING_AVG = {
 };
 
 export async function analyzeStudentPerformance(data: StudentData): Promise<AnalysisResult> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  // Map frontend data to backend features
+  const features = {
+    studytime: data.studytime,
+    failures: data.failures,
+    absences: data.absences,
+    goout: data.goout,
+    freetime: data.freetime,
+    Dalc: data.Dalc,
+    Walc: data.Walc,
+    health: data.health,
+    traveltime: data.traveltime,
+    internet: data.internet ? "yes" : "no",
+    romantic: data.romantic ? "yes" : "no",
+    higher: data.higher ? "yes" : "no",
+    schoolsup: data.schoolsup ? "yes" : "no",
+    famsup: data.famsup ? "yes" : "no",
+    paid: data.paid ? "yes" : "no",
+    activities: data.activities ? "yes" : "no",
+    nursery: data.nursery ? "yes" : "no",
+    sex: data.sex,
+    age: data.age,
+    address: data.address,
+    famsize: data.famsize,
+    Pstatus: data.Pstatus,
+    Medu: data.Medu,
+    Fedu: data.Fedu,
+    Mjob: data.Mjob,
+    Fjob: data.Fjob,
+    famrel: data.famrel,
+    G1: data.G1,
+    G2: data.G2,
+  };
 
-  // --- MOCK PREDICTION ALGORITHM ---
-  // Base G3 score (average is ~11.9 in dataset)
-  let score = 11.5;
+  const response = await fetch("/api/predict", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(features),
+  });
 
-  // Use G1 and G2 if available and non-zero for a "mid-term" check
-  if (data.G1 > 0 || data.G2 > 0) {
-      const currentAvg = (data.G1 + data.G2) / (data.G1 > 0 && data.G2 > 0 ? 2 : 1);
-      score = currentAvg; // Start from current performance
+  if (!response.ok) {
+    throw new Error(`API call failed: ${response.statusText}`);
   }
 
-  // 1. Failures (Strongest negative correlation)
-  score -= data.failures * 1.8;
+  const result = await response.json();
+  const cookedScore = result.score;
+  const apiMessage = result.message;
 
-  // 2. Higher Education (Strong positive)
-  if (data.higher) score += 1.5;
-  else score -= 1.5;
-
-  // 3. Study Time (Positive)
-  score += (data.studytime - 2) * 1.0;
-
-  // 4. Alcohol (Negative) - More impact from weekend
-  score -= (data.Dalc - 1) * 0.3;
-  score -= (data.Walc - 1) * 0.5;
-
-  // 5. Absences (Negative, non-linear)
-  if (data.absences > 10) score -= 2.0;
-  else if (data.absences > 5) score -= 1.0;
-  else if (data.absences > 0) score -= 0.2;
-
-  // 6. Romantic (Slightly negative often, distraction)
-  if (data.romantic) score -= 0.5;
-
-  // 7. Go Out (Moderate is good, Too high is bad)
-  if (data.goout > 4) score -= 0.8;
-  else if (data.goout < 2) score += 0.2; // Some social life is good
-
-  // 8. Family Relationships (Positive)
-  score += (data.famrel - 3) * 0.3;
-
-  // 9. Parental Education (Positive)
-  score += (data.Medu - 2) * 0.2;
-  score += (data.Fedu - 2) * 0.2;
-
-  // 10. School Support, Family Support, Paid classes, Activities, Nursery (mostly positive)
-  if (data.schoolsup) score -= 0.5; // Schoolsup might indicate struggle
-  if (data.famsup) score += 0.5;
-  if (data.paid) score += 0.2;
-  if (data.activities) score += 0.3;
-  if (data.nursery) score += 0.1;
-
-  // 11. Internet Access (Positive)
-  if (data.internet) score += 0.5;
-
-  // 12. Travel Time (Negative)
-  score -= (data.traveltime - 1) * 0.3;
-
-  // 13. Freetime (Balance is key)
-  if (data.freetime > 4) score -= 0.2;
-  else if (data.freetime < 2) score -= 0.2;
-
-  // 14. Age (Older students sometimes struggle more - but also more mature)
-  if (data.age > 18) score -= 0.3;
-
-  // Clamp G3 (0-20)
-  score = Math.max(0, Math.min(20, score));
-  const predictedG3 = Math.round(score);
-
-  // Calculate Cooked Score (1-10) - Inverse mapping
-  let cookedScore = Math.max(1, Math.min(10, Math.round(11 - (score / 2))));
-  if (data.failures >= 3) cookedScore = Math.max(cookedScore, 9); // Heavy penalty for failures
+  // Reverse calculate G3 from Cooked Score for UI consistency
+  // cookedScore = 11 - G3/2  => G3 = (11 - cookedScore) * 2
+  const predictedG3 = Math.max(0, Math.min(20, (11 - cookedScore) * 2));
 
   let riskLevel: AnalysisResult["riskLevel"] = "Academic Weapon";
   let probFail = 5;
@@ -159,17 +138,19 @@ export async function analyzeStudentPerformance(data: StudentData): Promise<Anal
   }
   probFail = Math.min(99, Math.max(1, Math.round(probFail)));
 
-  // Generate Recommendations
+  // Generate Recommendations (Brainrot style + API message)
   const recommendations = [];
+  if (apiMessage) recommendations.push(`AI Verdict: ${apiMessage}`);
+  
   if (data.failures > 0) recommendations.push(`Academic Comeback Needed: You have ${data.failures} past L's. You need to lock in exponentially harder.`);
-  if (data.studytime < 2) recommendations.push("Focus Flow 404: <2h study/week? Even NPCs study more. Pump those numbers.");
+  if (data.studytime < 3) recommendations.push("Focus Flow 404: <3h study/week? Even NPCs study more. Pump those numbers.");
   if (data.Dalc > 2 || data.Walc > 3) recommendations.push(`Party Nerf: ${data.Dalc} (Workday) / ${data.Walc} (Weekend) alcohol is debuffing your INT. Sober up for the W.`);
   if (data.absences > 5) recommendations.push("Ghost Protocol: Skipping class isn't a strat. Show up or drop out.");
   if (!data.higher) recommendations.push("Aim Higher: No plans for uni? Bro, at least maximize your current stats.");
   if (data.romantic && predictedG3 < 12) recommendations.push("Simp Tax: Relationship might be nerfing your focus. Balance the romance with the books.");
   if (data.Medu < 2 && data.Fedu < 2) recommendations.push("Parental Buffs: Family education level is low. Seek mentors or external resources for guidance.");
-  if (data.traveltime > 2) recommendations.push("Travel Lag: Long commute drains energy. Optimize study setup or consider closer options if possible.");
-  if (data.freetime > 4 && data.studytime < 3) recommendations.push("Skill Issue: Too much free time, not enough study time. Balance the scales.");
+  if (data.traveltime > 60) recommendations.push("Travel Lag: >1h commute drains energy. Optimize study setup or consider closer options if possible.");
+  if (data.freetime > 4 && data.studytime < 5) recommendations.push("Skill Issue: Too much free time, not enough study time. Balance the scales.");
   if (!data.internet) recommendations.push("Offline Mode: No internet access is a major debuff. Find a reliable connection for learning resources.");
   
   if (recommendations.length === 0) recommendations.push("Giga-Chad Status: Stats look clean. Keep mogging the curriculum.");
@@ -181,7 +162,7 @@ export async function analyzeStudentPerformance(data: StudentData): Promise<Anal
     probabilityOfFailing: probFail,
     recommendations,
     radarData: [
-      { subject: 'Focus Flow', A: data.studytime * 25, B: PASSING_AVG.studytime * 25, fullMark: 100 },
+      { subject: 'Focus Flow', A: Math.min(100, data.studytime * 5), B: Math.min(100, PASSING_AVG.studytime * 5), fullMark: 100 }, // 20h = 100%
       { subject: 'Social Life', A: (data.goout + data.Dalc + data.Walc) * (100 / 15), B: (PASSING_AVG.goout + PASSING_AVG.Dalc + PASSING_AVG.Walc) * (100 / 15), fullMark: 100 }, 
       { subject: 'Health', A: data.health * 20, B: PASSING_AVG.health * 20, fullMark: 100 },
       { subject: 'Family Rel.', A: data.famrel * 20, B: PASSING_AVG.famrel * 20, fullMark: 100 },
@@ -189,7 +170,7 @@ export async function analyzeStudentPerformance(data: StudentData): Promise<Anal
       { subject: 'Attendance', A: Math.max(0, 100 - (data.absences * 2)), B: Math.max(0, 100 - (PASSING_AVG.absences * 2)), fullMark: 100 },
     ],
     factorImpacts: [
-      { factor: "Study Habits", impact: data.studytime > 2 ? "positive" : "negative", value: data.studytime > 2 ? "High" : "Low" },
+      { factor: "Study Habits", impact: data.studytime > 5 ? "positive" : "negative", value: data.studytime > 5 ? "High" : "Low" },
       { factor: "Past Failures", impact: data.failures === 0 ? "positive" : "negative", value: data.failures.toString() },
       { factor: "Absences", impact: data.absences < 4 ? "positive" : "negative", value: `${data.absences} missed` },
       { factor: "Parental Support", impact: data.famsup ? "positive" : "negative", value: data.famsup ? "Yes" : "No" },

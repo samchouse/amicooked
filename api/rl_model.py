@@ -214,7 +214,7 @@ class AmICookedRLModel:
         # Non-controllable features (weighted at 70%)
         self.non_controllable_features = [
             "sex", "age", "address", "famsize", "Pstatus",
-            "Medu", "Fedu", "Mjob", "Fjob", "nursery"
+            "Medu", "Fedu", "Mjob", "Fjob", "nursery", "famrel"
         ]
         self.non_controllable_weight = 0.7
 

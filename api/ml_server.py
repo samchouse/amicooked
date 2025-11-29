@@ -1,12 +1,22 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict, Literal
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, ConfigDict, model_validator
+from typing import Optional, Dict, Literal, Any
 from rl_model import AmICookedRLModel
 import uvicorn
 import threading
 import numpy as np
 
 app = FastAPI(title="AmICooked RL API", version="3.0.0")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Initialize RL model (load from disk if exists)
 model = AmICookedRLModel.load_model()
@@ -43,18 +53,18 @@ class StudentFeatures(BaseModel):
     age: Optional[int] = Field(None, ge=15, le=22, description="Student age (weighted 70%)")
     Medu: Optional[int] = Field(None, ge=0, le=4, description="Mother's education 0-4 (weighted 70%)")
     Fedu: Optional[int] = Field(None, ge=0, le=4, description="Father's education 0-4 (weighted 70%)")
-    traveltime: Optional[int] = Field(None, ge=1, le=4, description="Home to school travel time (1-4)")
-    studytime: Optional[int] = Field(None, ge=1, le=4, description="Weekly study time (1-4)")
-    failures: Optional[int] = Field(None, ge=0, le=4, description="Number of past class failures")
+    traveltime: Optional[int] = Field(None, ge=0, le=4, description="Home to school travel time (1-4 or raw minutes)")
+    studytime: Optional[int] = Field(None, ge=0, le=4, description="Weekly study time (1-4 or raw hours)")
+    failures: Optional[int] = Field(None, ge=0, description="Number of past class failures")
     famrel: Optional[int] = Field(None, ge=1, le=5, description="Quality of family relationships (1-5)")
     freetime: Optional[int] = Field(None, ge=1, le=5, description="Free time after school (1-5)")
     goout: Optional[int] = Field(None, ge=1, le=5, description="Going out with friends (1-5)")
     Dalc: Optional[int] = Field(None, ge=1, le=5, description="Workday alcohol consumption (1-5)")
     Walc: Optional[int] = Field(None, ge=1, le=5, description="Weekend alcohol consumption (1-5)")
     health: Optional[int] = Field(None, ge=1, le=5, description="Current health status (1-5)")
-    absences: Optional[int] = Field(None, ge=0, le=93, description="Number of school absences")
-    G1: Optional[int] = Field(None, ge=0, le=20, description="First period grade (0-20)")
-    G2: Optional[int] = Field(None, ge=0, le=20, description="Second period grade (0-20)")
+    absences: Optional[int] = Field(None, ge=0, description="Number of school absences")
+    G1: Optional[int] = Field(None, ge=0, description="First period grade (0-20)")
+    G2: Optional[int] = Field(None, ge=0, description="Second period grade (0-20)")
 
     # Boolean/Categorical features (yes/no)
     schoolsup: Optional[Literal["yes", "no"]] = Field(None, description="Extra educational support")
@@ -65,6 +75,66 @@ class StudentFeatures(BaseModel):
     higher: Optional[Literal["yes", "no"]] = Field(None, description="Wants higher education")
     internet: Optional[Literal["yes", "no"]] = Field(None, description="Internet access at home")
     romantic: Optional[Literal["yes", "no"]] = Field(None, description="In a romantic relationship")
+
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_inputs(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Normalize studytime (raw hours to 1-4 scale)
+            # 1: <2h, 2: 2-5h, 3: 5-10h, 4: >10h
+            if 'studytime' in data and data['studytime'] is not None:
+                val = data['studytime']
+                # Assume any input is raw hours since we expect unnormalized data
+                if val < 2:
+                    data['studytime'] = 1
+                elif val <= 5:
+                    data['studytime'] = 2
+                elif val <= 10:
+                    data['studytime'] = 3
+                else:
+                    data['studytime'] = 4
+            
+            # Normalize traveltime (raw minutes to 1-4 scale)
+            # 1: <15m, 2: 15-30m, 3: 30-60m, 4: >60m
+            if 'traveltime' in data and data['traveltime'] is not None:
+                val = data['traveltime']
+                if val < 15:
+                    data['traveltime'] = 1
+                elif val <= 30:
+                    data['traveltime'] = 2
+                elif val <= 60:
+                    data['traveltime'] = 3
+                else:
+                    data['traveltime'] = 4
+            
+            # Clamp values
+            if 'failures' in data and data['failures'] is not None:
+                data['failures'] = min(data['failures'], 4)
+            
+            if 'absences' in data and data['absences'] is not None:
+                data['absences'] = min(data['absences'], 93)
+                
+            if 'G1' in data and data['G1'] is not None:
+                data['G1'] = min(data['G1'], 20)
+                
+            if 'G2' in data and data['G2'] is not None:
+                data['G2'] = min(data['G2'], 20)
+            
+            # Clamp age (15-22)
+            if 'age' in data and data['age'] is not None:
+                data['age'] = max(15, min(data['age'], 22))
+                
+            # Clamp 0-4 scale features
+            for field in ['Medu', 'Fedu']:
+                if field in data and data[field] is not None:
+                    data[field] = max(0, min(data[field], 4))
+            
+            # Clamp 1-5 scale features
+            for field in ['famrel', 'freetime', 'goout', 'Dalc', 'Walc', 'health']:
+                if field in data and data[field] is not None:
+                    data[field] = max(1, min(data[field], 5))
+                
+        return data
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -174,6 +244,28 @@ def train_initial_model(background_tasks: BackgroundTasks):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Training error: {str(e)}")
+
+
+@app.post("/retrain", response_model=TrainingResponse)
+def retrain_model(background_tasks: BackgroundTasks):
+    """
+    Retrain the base model on the student performance dataset.
+    Useful if the underlying CSV data has changed.
+    Preserves existing RL feedback history.
+    """
+    try:
+        with training_lock:
+            print("Starting retraining...")
+            results = model.load_and_train_initial_model()
+            model.save_model()
+
+        return TrainingResponse(
+            success=True,
+            message="Model successfully retrained on dataset",
+            details=results
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Retraining error: {str(e)}")
 
 
 @app.post("/predict", response_model=ScoreResponse)

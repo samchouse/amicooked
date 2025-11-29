@@ -332,19 +332,19 @@ export default function Survey({ onComplete }: SurveyProps) {
             <SliderCard
               icon={<Brain className="w-5 h-5" />}
               title="Weekly Study"
-              min={1} max={4} value={formData.studytime}
+              min={0} max={60} value={formData.studytime}
               onChange={(e) => updateField("studytime", parseInt(e.target.value))}
-              units=" tier"
-              labels={{ min: "<2h", max: ">10h" }}
+              units=" hours"
+              labels={{ min: "0h", max: "60h+" }}
               colorClass="text-orange-400"
             />
             <SliderCard
               icon={<Car className="w-5 h-5" />}
               title="Travel Time"
-              min={1} max={4} value={formData.traveltime}
+              min={0} max={120} value={formData.traveltime}
               onChange={(e) => updateField("traveltime", parseInt(e.target.value))}
-              units=" tier"
-              labels={{ min: "<15m", max: ">1h" }}
+              units=" min"
+              labels={{ min: "0m", max: "120m+" }}
               colorClass="text-yellow-400"
             />
           </div>
