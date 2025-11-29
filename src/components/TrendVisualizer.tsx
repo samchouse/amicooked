@@ -2,31 +2,55 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
-import { Loader2, TrendingUp, Filter } from "lucide-react";
-
-interface Student {
-  [key: string]: string | number;
-}
+import { Loader2, TrendingUp } from "lucide-react";
+import { StudentData, AnalysisResult } from "@/lib/api";
 
 interface TrendVisualizerProps {
   studentData: any[]; // Passed from server component or API
-  userResult: any; // Current user's data
+  userSurveyData: StudentData; // Current user's data from survey
+  userAnalysisResult: AnalysisResult; // New prop for analysis results
 }
 
+// Variables that can be plotted
 const VARIABLES = [
+  // Numeric features from dataset
+  { key: "age", label: "Age" },
+  { key: "Medu", label: "Mother's Edu (0-4)" },
+  { key: "Fedu", label: "Father's Edu (0-4)" },
+  { key: "traveltime", label: "Travel Time (1-4)" },
   { key: "studytime", label: "Study Time (1-4)" },
-  { key: "absences", label: "Absences" },
-  { key: "G3", label: "Final Grade (0-20)" },
-  { key: "health", label: "Health (1-5)" },
+  { key: "failures", label: "Past Failures" },
+  { key: "famrel", label: "Family Relations (1-5)" },
+  { key: "freetime", label: "Free Time (1-5)" },
   { key: "goout", label: "Going Out (1-5)" },
   { key: "Dalc", label: "Daily Alcohol (1-5)" },
   { key: "Walc", label: "Weekend Alcohol (1-5)" },
-  { key: "failures", label: "Past Failures" },
-  { key: "freetime", label: "Free Time (1-5)" },
-  { key: "age", label: "Age" },
+  { key: "health", label: "Health (1-5)" },
+  { key: "absences", label: "Absences" },
+  { key: "G1", label: "Grade 1 (0-20)" },
+  { key: "G2", label: "Grade 2 (0-20)" },
+  { key: "G3", label: "Final Grade (0-20)" }, 
+  
+  // Binary/Categorical, mapped to numeric for plotting
+  { key: "sex", label: "Sex (F=0, M=1)" },
+  { key: "address", label: "Address (U=0, R=1)" },
+  { key: "famsize", label: "Family Size (LE3=0, GT3=1)" },
+  { key: "Pstatus", label: "PStatus (A=0, T=1)" },
+  { key: "schoolsup", label: "School Support (No=0, Yes=1)" },
+  { key: "famsup", label: "Family Support (No=0, Yes=1)" },
+  { key: "paid", label: "Paid Classes (No=0, Yes=1)" },
+  { key: "activities", label: "Activities (No=0, Yes=1)" },
+  { key: "nursery", label: "Nursery (No=0, Yes=1)" },
+  { key: "higher", label: "Higher Edu (No=0, Yes=1)" },
+  { key: "internet", label: "Internet (No=0, Yes=1)" },
+  { key: "romantic", label: "Romantic (No=0, Yes=1)" },
+
+  // Mjob, Fjob are nominal and complex for scatter plots, can add if needed.
+  { key: "Mjob", label: "Mother's Job (Mapped)" },
+  { key: "Fjob", label: "Father's Job (Mapped)" },
 ];
 
-export default function TrendVisualizer({ studentData, userResult }: TrendVisualizerProps) {
+export default function TrendVisualizer({ studentData, userSurveyData, userAnalysisResult }: TrendVisualizerProps) {
   const [xVar, setXVar] = useState("studytime");
   const [yVar, setYVar] = useState("G3");
   const [showUser, setShowUser] = useState(true);
@@ -36,25 +60,59 @@ export default function TrendVisualizer({ studentData, userResult }: TrendVisual
     setMounted(true);
   }, []);
 
-  // Prepare data for chart
-  const userPoint = useMemo(() => ({
-    studytime: userResult.studyTime,
-    absences: userResult.absences,
-    G3: userResult.predictedG3,
-    health: userResult.health,
-    goout: userResult.goOut,
-    Dalc: Math.max(1, Math.floor(userResult.alcohol / 2)),
-    Walc: Math.max(1, Math.ceil(userResult.alcohol / 2)),
-    failures: userResult.failures,
-    freetime: userResult.freeTime,
-    age: 17
-  }), [userResult]);
+  // Map user survey data to dataset keys
+  const userPoint = useMemo(() => {
+    const mappedUserPoint: { [key: string]: number | string } = {};
+
+    const nominalToNumeric = (value: string | boolean | number, key: string) => {
+      if (typeof value === 'boolean') return value ? 1 : 0;
+      switch (key) {
+        case 'sex': return value === 'M' ? 1 : 0; // F=0, M=1
+        case 'address': return value === 'R' ? 1 : 0; // U=0, R=1
+        case 'famsize': return value === 'GT3' ? 1 : 0; // LE3=0, GT3=1
+        case 'Pstatus': return value === 'T' ? 1 : 0; // A=0, T=1
+        case 'Mjob':
+        case 'Fjob':
+          const jobs = ["at_home", "health", "other", "services", "teacher"];
+          return jobs.indexOf(value as string); 
+        default: return value;
+      }
+    };
+
+    // Iterate through survey data and map to numeric keys for plotting
+    for (const varDef of VARIABLES) {
+      const key = varDef.key;
+      let value = (userSurveyData as any)[key]; 
+      
+      // Special handling for G3, G1, G2 
+      if (key === 'G3') {
+        mappedUserPoint[key] = userAnalysisResult.predictedG3; 
+        continue;
+      }
+      
+      // For G1 and G2, we now have them in the survey data, so we can use them directly
+      // if they were provided (non-zero). If 0, we might fallback to predictedG3 or keep as 0.
+      // However, the userSurveyData.G1 is the raw input.
+      if (key === 'G1') {
+         mappedUserPoint[key] = userSurveyData.G1 > 0 ? userSurveyData.G1 : userAnalysisResult.predictedG3;
+         continue;
+      }
+      if (key === 'G2') {
+         mappedUserPoint[key] = userSurveyData.G2 > 0 ? userSurveyData.G2 : userAnalysisResult.predictedG3;
+         continue;
+      }
+      
+      mappedUserPoint[key] = nominalToNumeric(value, key);
+    }
+
+    return mappedUserPoint;
+  }, [userSurveyData, userAnalysisResult]);
 
   const chartData = useMemo(() => studentData.map((s, i) => ({
     x: Number(s[xVar]),
     y: Number(s[yVar]),
     id: i
-  })), [studentData, xVar, yVar]);
+  })).filter(p => !isNaN(p.x) && !isNaN(p.y)), [studentData, xVar, yVar]);
 
   const userChartPoint = useMemo(() => ({
     x: Number((userPoint as any)[xVar]),
@@ -63,23 +121,34 @@ export default function TrendVisualizer({ studentData, userResult }: TrendVisual
   }), [userPoint, xVar, yVar]);
 
   const trendLineData = useMemo(() => {
-    if (chartData.length === 0) return [];
+    if (chartData.length < 2) return [];
 
-    const n = chartData.length;
-    const sumX = chartData.reduce((acc, p) => acc + p.x, 0);
-    const sumY = chartData.reduce((acc, p) => acc + p.y, 0);
-    const sumXY = chartData.reduce((acc, p) => acc + p.x * p.y, 0);
-    const sumXX = chartData.reduce((acc, p) => acc + p.x * p.x, 0);
+    const cleanData = chartData.filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    if (cleanData.length < 2) return [];
+    
+    const n = cleanData.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+
+    for (const p of cleanData) {
+      sumX += p.x;
+      sumY += p.y;
+      sumXY += p.x * p.y;
+      sumXX += p.x * p.x;
+    }
+
+    const denominator = n * sumXX - sumX * sumX;
+    if (denominator === 0) return [];
+
+    const slope = (n * sumXY - sumX * sumY) / denominator;
     const intercept = (sumY - slope * sumX) / n;
 
-    const minX = Math.min(...chartData.map(p => p.x));
-    const maxX = Math.max(...chartData.map(p => p.x));
-
+    const minX = Math.min(...cleanData.map(p => p.x));
+    const maxX = Math.max(...cleanData.map(p => p.x));
+    
     return [
-      { x: minX, y: slope * minX + intercept },
-      { x: maxX, y: slope * maxX + intercept }
+      { x: minX, y: slope * minX + intercept, isTrend: true },
+      { x: maxX, y: slope * maxX + intercept, isTrend: true }
     ];
   }, [chartData]);
 

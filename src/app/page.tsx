@@ -63,25 +63,25 @@ export default function Home() {
       <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 pt-24 relative z-10">
         
         {appState === "landing" && (
-          <div className="max-w-3xl w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
+          <div className="max-w-3xl w-full text-center space-y-8">
             
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-sm font-medium shadow-[0_0_20px_rgba(249,115,22,0.15)] mb-4">
+            <div className="animate-fade-in-up delay-0 inline-flex items-center px-4 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-sm font-medium shadow-[0_0_20px_rgba(249,115,22,0.15)] mb-4">
               <GraduationCap className="w-4 h-4 mr-2" />
               Assess your academic standing
             </div>
 
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight drop-shadow-2xl">
+            <h1 className="animate-fade-in-up delay-100 text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight drop-shadow-2xl">
               ARE YOU <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600 animate-gradient-x">
                 COOKED?
               </span>
             </h1>
             
-            <p className="text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            <p className="animate-fade-in-up delay-200 text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed">
               Find out if you're academically doomed or destined for greatness. Our algorithm benchmarks your habits against the "passing" meta to calculate your survival odds.
             </p>
 
-            <div className="pt-8">
+            <div className="pt-8 animate-fade-in-up delay-300">
               <button
                 onClick={handleStart}
                 className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-white text-black rounded-xl hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95"
@@ -97,14 +97,14 @@ export default function Home() {
         )}
 
         {appState === "survey" && (
-          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="w-full max-w-2xl animate-scale-in">
             <Survey onComplete={handleSurveyComplete} />
           </div>
         )}
 
         {appState === "results" && result && data && (
-          <div className="w-full max-w-5xl animate-in fade-in zoom-in-95 duration-500">
-            <Dashboard result={result} onReset={handleReset} studentData={studentDataset} userSurveyData={data} />
+          <div className="w-full max-w-5xl animate-scale-in">
+            <Dashboard result={result} onReset={handleReset} studentData={studentDataset} userSurveyData={data} userAnalysisResult={result} />
           </div>
         )}
       </div>

@@ -9,11 +9,12 @@ import TrendVisualizer from "./TrendVisualizer";
 interface DashboardProps {
   result: AnalysisResult;
   onReset: () => void;
-  studentData: any[]; // Add this
-  userSurveyData: StudentData; // Add this
+  studentData: any[];
+  userSurveyData: StudentData;
+  userAnalysisResult: AnalysisResult; // NEW PROP
 }
 
-export default function Dashboard({ result, onReset, studentData, userSurveyData }: DashboardProps) {
+export default function Dashboard({ result, onReset, studentData, userSurveyData, userAnalysisResult }: DashboardProps) {
   
   const percentage = (result.cookedScore / 10) * 100;
   const strokeDasharray = 2 * Math.PI * 45; 
@@ -32,7 +33,7 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
     <div className="w-full space-y-8">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6 gap-4 animate-fade-in-up delay-0">
         <div>
           <div className="flex items-center gap-2 mb-1">
              <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-xs font-mono uppercase">Model: Student-Por-v1</span>
@@ -61,7 +62,7 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column: The Meter & Key Stats */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 animate-fade-in-up delay-100">
             
             {/* Meter */}
             <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden min-h-[350px]">
@@ -108,7 +109,7 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
         </div>
 
         {/* Right Column: Charts & Insights */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-6 animate-fade-in-up delay-200">
            
            {/* Radar Chart */}
            <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-6">
@@ -170,7 +171,7 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
       </div>
 
       {/* Factor Impacts - Bottom Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up delay-300">
           {result.factorImpacts.map((factor, idx) => (
               <div key={idx} className="bg-zinc-900/30 border border-white/5 p-4 rounded-2xl">
                  <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{factor.factor}</div>
@@ -184,8 +185,8 @@ export default function Dashboard({ result, onReset, studentData, userSurveyData
           ))}
       </div>
 
-      <div className="pt-8 border-t border-white/10">
-        <TrendVisualizer studentData={studentData} userResult={userSurveyData} />
+      <div className="pt-8 border-t border-white/10 animate-fade-in-up delay-400">
+        <TrendVisualizer studentData={studentData} userSurveyData={userSurveyData} userAnalysisResult={result} />
       </div>
 
     </div>
