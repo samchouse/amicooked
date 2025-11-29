@@ -1,65 +1,106 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Survey from "@/components/Survey";
+import Dashboard from "@/components/Dashboard";
+import { AnalysisResult, StudentData } from "@/lib/api";
+import { Flame, Skull, BrainCircuit } from "lucide-react";
+
+type AppState = "landing" | "survey" | "results";
 
 export default function Home() {
+  const [appState, setAppState] = useState<AppState>("landing");
+  const [data, setData] = useState<StudentData | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  const handleStart = () => {
+    setAppState("survey");
+  };
+
+  const handleSurveyComplete = (completedData: StudentData, analysisResult: AnalysisResult) => {
+    setData(completedData);
+    setResult(analysisResult);
+    setAppState("results");
+  };
+
+  const handleReset = () => {
+    setData(null);
+    setResult(null);
+    setAppState("landing");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-[#09090b] text-zinc-100 font-sans overflow-hidden relative selection:bg-orange-500/30">
+      
+      {/* Ambient Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-600/20 rounded-full blur-[128px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[128px] pointer-events-none animate-pulse" />
+
+      {/* Header */}
+      <nav className="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-center backdrop-blur-sm bg-[#09090b]/50 border-b border-white/5">
+        <div 
+          className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform" 
+          onClick={handleReset}
+        >
+          <div className="bg-gradient-to-br from-orange-500 to-red-600 p-1.5 rounded-lg shadow-lg shadow-orange-500/20">
+            <Flame className="w-5 h-5 text-white fill-white" />
+          </div>
+          <span className="font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+            Am I Cooked?
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+        
+        {appState === "landing" && (
+          <div className="max-w-3xl w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
+            
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-sm font-medium shadow-[0_0_20px_rgba(249,115,22,0.15)] mb-4">
+              <Skull className="w-4 h-4 mr-2" />
+              Check your academic survival rate
+            </div>
+
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight drop-shadow-2xl">
+              ARE YOU <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600 animate-gradient-x">
+                COOKED?
+              </span>
+            </h1>
+            
+            <p className="text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed">
+              Don't wait until finals week to find out. Calculate your <span className="text-white font-semibold">Cooked Score™</span> now based on your study habits, sleep schedule, and grindset.
+            </p>
+
+            <div className="pt-8">
+              <button
+                onClick={handleStart}
+                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-white text-black rounded-xl hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95"
+              >
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-lg -z-10" />
+                <span className="text-black group-hover:text-white transition-colors flex items-center gap-2 text-lg">
+                  <BrainCircuit className="w-5 h-5" />
+                  Calculate My Odds
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {appState === "survey" && (
+          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <Survey onComplete={handleSurveyComplete} />
+          </div>
+        )}
+
+        {appState === "results" && result && (
+          <div className="w-full max-w-5xl animate-in fade-in zoom-in-95 duration-500">
+            <Dashboard result={result} onReset={handleReset} />
+          </div>
+        )}
+
+      </div>
+    </main>
   );
 }
