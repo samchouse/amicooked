@@ -5,6 +5,7 @@
 {
   packages = with pkgs; [
     git
+    gemini-cli
     claude-code
   ];
 
