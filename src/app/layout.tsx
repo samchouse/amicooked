@@ -13,9 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GradeGuard | Am I Cooked?",
-  description: "Discover your academic risk score based on proven performance factors. Get personalized insights and see how you compare to successful students.",
-  keywords: ["student performance", "academic analyzer", "study habits", "education"],
+  title: "Am I Cooked?",
+  description:
+    "Discover your academic risk score based on proven performance factors. Get personalized insights and see how you compare to other students.",
+  keywords: [
+    "student performance",
+    "academic analyzer",
+    "study habits",
+    "education",
+  ],
 };
 
 export default function RootLayout({
