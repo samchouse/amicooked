@@ -190,7 +190,7 @@ export default function Survey({ onComplete }: SurveyProps) {
                      description=""
                      selected={formData.sex === val}
                      onClick={() => updateField("sex", val)}
-                     colorClass="text-blue-400"
+                     colorClass="text-indigo-400"
                    />
                  ))}
                </div>
